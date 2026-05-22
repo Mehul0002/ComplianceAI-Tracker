@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ComplianceAI — License Tracker for Indian SMBs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F3EE;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE6;
+  --border: #DDD9D0;
+  --text: #1A1815;
+  --text2: #6B6760;
+  --text3: #A09C97;
+  --accent: #1D6B4C;
+  --accent-light: #E4F2EC;
+  --accent2: #C84B2F;
+  --accent2-light: #FBF0ED;
+  --amber: #B87333;
+  --amber-light: #FBF5EE;
+  --blue: #1D4E8F;
+  --blue-light: #EDF2FB;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── LAYOUT ── */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+.sidebar {
+  width: 240px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+/* ── SIDEBAR ── */
+.sidebar-logo {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-mark {
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon {
+  width: 32px; height: 32px; background: var(--accent);
+  border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; color: white; font-size: 16px;
+}
+.logo-text { font-size: 15px; font-weight: 600; color: var(--text); }
+.logo-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+.nav { padding: 12px 10px; flex: 1; }
+.nav-section { font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 10px 4px; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--text2); font-size: 13.5px;
+  transition: all 0.15s; margin-bottom: 2px; position: relative;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+.nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
+.nav-badge {
+  margin-left: auto; background: var(--accent2); color: white;
+  font-size: 10px; font-weight: 600; padding: 1px 6px;
+  border-radius: 10px; min-width: 18px; text-align: center;
+}
+.nav-badge.green { background: var(--accent); }
+
+.sidebar-footer {
+  padding: 12px; border-top: 1px solid var(--border);
+}
+.business-card {
+  background: var(--surface2); border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.biz-name { font-size: 13px; font-weight: 500; }
+.biz-type { font-size: 11px; color: var(--text3); }
+
+/* ── TOP BAR ── */
+.topbar {
+  padding: 16px 28px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.page-title { font-family: 'Instrument Serif', serif; font-size: 22px; color: var(--text); flex: 1; }
+.topbar-actions { display: flex; gap: 8px; }
+
+.btn {
+  padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px;
+  font-family: 'DM Sans', sans-serif; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text);
+  transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--surface2); }
+.btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+.btn-primary:hover { background: #175c3f; }
+.btn-danger { background: var(--accent2); color: white; border-color: var(--accent2); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+
+/* ── CONTENT ── */
+.content { padding: 24px 28px; flex: 1; }
+
+/* ── VIEWS (show/hide) ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── STATS ROW ── */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+}
+.stat-label { font-size: 11px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.stat-card.danger .stat-value { color: var(--accent2); }
+.stat-card.warn .stat-value { color: var(--amber); }
+.stat-card.good .stat-value { color: var(--accent); }
+
+/* ── LICENSE GRID ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 5px 12px; border-radius: 20px; font-size: 12px;
+  border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; color: var(--text2); transition: all 0.12s;
+}
+.filter-btn:hover, .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+.license-list { display: flex; flex-direction: column; gap: 10px; }
+
+.license-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  display: grid; grid-template-columns: 3fr 1.5fr 1.5fr 1fr auto;
+  align-items: center; gap: 16px;
+  transition: box-shadow 0.15s;
+}
+.license-card:hover { box-shadow: var(--shadow); }
+.license-card.expired { border-left: 3px solid var(--accent2); }
+.license-card.expiring { border-left: 3px solid var(--amber); }
+.license-card.good { border-left: 3px solid var(--accent); }
+
+.lic-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.lic-body { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.lic-number { font-size: 12px; color: var(--text2); font-family: monospace; background: var(--surface2); padding: 2px 7px; border-radius: 4px; display: inline-block; margin-top: 3px; }
+
+.lic-date { font-size: 13px; color: var(--text2); }
+.lic-date-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+.days-badge {
+  font-size: 12px; font-weight: 600; padding: 4px 10px;
+  border-radius: 20px; text-align: center;
+}
+.days-badge.expired { background: var(--accent2-light); color: var(--accent2); }
+.days-badge.warning { background: var(--amber-light); color: var(--amber); }
+.days-badge.safe { background: var(--accent-light); color: var(--accent); }
+
+.card-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 30px; height: 30px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font-size: 14px; color: var(--text2);
+  transition: all 0.12s;
+}
+.icon-btn:hover { background: var(--surface2); color: var(--text); }
+.icon-btn.delete:hover { background: var(--accent2-light); color: var(--accent2); border-color: var(--accent2); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35); z-index: 100;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: var(--radius);
+  width: 520px; max-width: 95vw; max-height: 88vh;
+  overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn { from { transform: scale(0.96) translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-header {
+  padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-family: 'Instrument Serif', serif; font-size: 18px; }
+.modal-body { padding: 20px 22px; }
+.modal-footer {
+  padding: 14px 22px; border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px;
+}
+
+/* ── FORM ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+label { font-size: 12px; font-weight: 500; color: var(--text2); }
+input, select, textarea {
+  padding: 9px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13.5px;
+  font-family: 'DM Sans', sans-serif; color: var(--text);
+  background: var(--surface); transition: border-color 0.12s;
+  outline: none; width: 100%;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 70px; }
+
+/* ── AI ONBOARDING ── */
+.ai-panel {
+  background: linear-gradient(135deg, #1D6B4C 0%, #0F4A34 100%);
+  border-radius: var(--radius); padding: 24px; color: white;
+  margin-bottom: 24px; position: relative; overflow: hidden;
+}
+.ai-panel::before {
+  content: ''; position: absolute; right: -20px; top: -20px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+}
+.ai-panel-title { font-family: 'Instrument Serif', serif; font-size: 18px; margin-bottom: 6px; }
+.ai-panel-sub { font-size: 13px; opacity: 0.8; margin-bottom: 16px; }
+.ai-input-row { display: flex; gap: 8px; }
+.ai-input {
+  flex: 1; padding: 10px 14px; border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.12);
+  color: white; font-family: 'DM Sans', sans-serif; font-size: 13.5px; outline: none;
+}
+.ai-input::placeholder { color: rgba(255,255,255,0.5); }
+.ai-input:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.18); }
+.ai-btn {
+  padding: 10px 18px; background: white; color: var(--accent);
+  border: none; border-radius: var(--radius-sm); font-weight: 600;
+  font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+.ai-btn:hover { background: #f0f0f0; }
+.ai-suggestions { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 7px; }
+.ai-tag {
+  padding: 4px 12px; background: rgba(255,255,255,0.15); border-radius: 20px;
+  font-size: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
+  transition: all 0.12s;
+}
+.ai-tag:hover { background: rgba(255,255,255,0.25); }
+
+.ai-result {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; margin-top: 14px;
+  display: none;
+}
+.ai-result.show { display: block; }
+.ai-result-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text); }
+.ai-lic-suggest {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border-radius: var(--radius-sm); margin-bottom: 6px;
+  background: var(--surface2); cursor: pointer; transition: all 0.12s;
+}
+.ai-lic-suggest:hover { background: var(--accent-light); }
+.ai-lic-suggest input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+.ai-lic-suggest-name { font-size: 13px; font-weight: 500; flex: 1; }
+.ai-lic-suggest-body { font-size: 11px; color: var(--text3); }
+
+/* ── ALERTS ── */
+.alert-list { display: flex; flex-direction: column; gap: 10px; }
+.alert-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.alert-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.alert-icon.red { background: var(--accent2-light); }
+.alert-icon.amber { background: var(--amber-light); }
+.alert-icon.green { background: var(--accent-light); }
+.alert-body { flex: 1; }
+.alert-title { font-size: 13.5px; font-weight: 500; }
+.alert-desc { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.alert-time { font-size: 11px; color: var(--text3); margin-left: auto; white-space: nowrap; }
+
+/* ── SETTINGS ── */
+.settings-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 14px; overflow: hidden;
+}
+.settings-section-header {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+}
+.settings-body { padding: 18px; }
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.settings-row:last-child { border-bottom: none; padding-bottom: 0; }
+.settings-label { font-size: 13.5px; }
+.settings-desc { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.toggle {
+  width: 40px; height: 22px; background: var(--border); border-radius: 11px;
+  position: relative; cursor: pointer; transition: background 0.2s;
+  border: none; outline: none;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: ''; position: absolute; width: 16px; height: 16px;
+  background: white; border-radius: 50%; top: 3px; left: 3px;
+  transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(18px); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 48px 20px; color: var(--text3);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; }
+
+/* ── PROGRESS BAR ── */
+.compliance-score {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; margin-bottom: 24px;
+}
+.score-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.score-title { font-size: 14px; font-weight: 600; }
+.score-value { font-size: 22px; font-weight: 600; color: var(--accent); }
+.score-bar { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.score-fill {
+  height: 100%; background: linear-gradient(90deg, var(--accent2), var(--amber), var(--accent));
+  border-radius: 4px; transition: width 0.5s ease;
+}
+.score-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-top: 5px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 200;
+  background: var(--text); color: white; padding: 12px 18px;
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+  transform: translateY(80px); opacity: 0; transition: all 0.3s;
+  pointer-events: none;
+}
+.toast.show { transform: none; opacity: 1; }
+
+/* ── LOADING ── */
+.loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .sidebar { width: 200px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .license-card { grid-template-columns: 1fr auto; grid-template-rows: auto auto; }
+}
+@media (max-width: 640px) {
+  .sidebar { display: none; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .content { padding: 16px; }
+  .topbar { padding: 12px 16px; }
+}
+
+/* ── CATEGORY BADGE ── */
+.cat-badge {
+  display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px;
+  border-radius: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.cat-fssai { background: #FBF5EE; color: var(--amber); }
+.cat-gst { background: var(--blue-light); color: var(--blue); }
+.cat-shop { background: var(--accent-light); color: var(--accent); }
+.cat-fire { background: var(--accent2-light); color: var(--accent2); }
+.cat-other { background: var(--surface2); color: var(--text2); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+.box-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+
+/* checklist */
+.check-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.check-item:last-child { border-bottom: none; }
+.check-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.check-dot.red { background: var(--accent2); }
+.check-dot.amber { background: var(--amber); }
+.check-dot.green { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">🛡</div>
+        <div>
+          <div class="logo-text">ComplianceAI</div>
+          <div class="logo-sub">License Tracker</div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" onclick="showView('dashboard')">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showView('licenses')">
+        <span class="icon">📋</span> My Licenses
+        <span class="nav-badge green" id="nav-count">0</span>
+      </div>
+      <div class="nav-item" onclick="showView('alerts')">
+        <span class="icon">🔔</span> Alerts
+        <span class="nav-badge" id="nav-alerts">0</span>
+      </div>
+      <div class="nav-section">Tools</div>
+      <div class="nav-item" onclick="showView('ai-scan')">
+        <span class="icon">🤖</span> AI License Scan
+      </div>
+      <div class="nav-item" onclick="showView('renewals')">
+        <span class="icon">🔄</span> Renewals
+      </div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" onclick="showView('settings')">
+        <span class="icon">⚙️</span> Settings
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="business-card">
+        <div class="biz-name" id="sb-biz-name">My Business</div>
+        <div class="biz-type" id="sb-biz-type">Not set up yet</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add License</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══════════ DASHBOARD VIEW ═══════════ -->
+      <div class="view active" id="view-dashboard">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Total Licenses</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-sub">Tracked by you</div>
+          </div>
+          <div class="stat-card danger">
+            <div class="stat-label">Expired</div>
+            <div class="stat-value" id="stat-expired">0</div>
+            <div class="stat-sub">Immediate action needed</div>
+          </div>
+          <div class="stat-card warn">
+            <div class="stat-label">Expiring Soon</div>
+            <div class="stat-value" id="stat-expiring">0</div>
+            <div class="stat-sub">Within 90 days</div>
+          </div>
+          <div class="stat-card good">
+            <div class="stat-label">Valid</div>
+            <div class="stat-value" id="stat-valid">0</div>
+            <div class="stat-sub">All clear</div>
+          </div>
+        </div>
+
+        <div class="compliance-score">
+          <div class="score-header">
+            <div class="score-title">📈 Compliance Health Score</div>
+            <div class="score-value" id="score-val">—</div>
+          </div>
+          <div class="score-bar"><div class="score-fill" id="score-fill" style="width:0%"></div></div>
+          <div class="score-labels"><span>Critical</span><span>Needs Work</span><span>Good</span><span>Excellent</span></div>
+        </div>
+
+        <div class="two-col">
+          <div class="box">
+            <div class="box-title">⚠️ Urgent Attention</div>
+            <div id="dash-urgent">
+              <div class="empty-state" style="padding:20px">
+                <div style="font-size:28px">✅</div>
+                <div class="empty-title" style="font-size:13px">All clear!</div>
+                <div class="empty-sub">No urgent licenses</div>
+              </div>
+            </div>
+          </div>
+          <div class="box">
+            <div class="box-title">📅 Upcoming Renewals</div>
+            <div id="dash-upcoming">
+              <div class="empty-state" style="padding:20px">
+                <div style="font-size:28px">🗓</div>
+                <div class="empty-title" style="font-size:13px">Nothing due soon</div>
+                <div class="empty-sub">Add licenses to track</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ LICENSES VIEW ═══════════ -->
+      <div class="view" id="view-licenses">
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterLicenses('all', this)">All</button>
+          <button class="filter-btn" onclick="filterLicenses('expired', this)">🔴 Expired</button>
+          <button class="filter-btn" onclick="filterLicenses('expiring', this)">🟡 Expiring</button>
+          <button class="filter-btn" onclick="filterLicenses('valid', this)">🟢 Valid</button>
+          <button class="filter-btn" onclick="filterLicenses('fssai', this)">FSSAI</button>
+          <button class="filter-btn" onclick="filterLicenses('gst', this)">GST</button>
+        </div>
+        <div class="license-list" id="license-list">
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <div class="empty-title">No licenses yet</div>
+            <div class="empty-sub">Click <strong>+ Add License</strong> or use the <strong>AI Scan</strong> to detect what you need.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ ALERTS VIEW ═══════════ -->
+      <div class="view" id="view-alerts">
+        <div class="alert-list" id="alert-list">
+          <div class="empty-state">
+            <div class="empty-icon">🔔</div>
+            <div class="empty-title">No alerts</div>
+            <div class="empty-sub">Add licenses to get smart reminders</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ AI SCAN VIEW ═══════════ -->
+      <div class="view" id="view-ai-scan">
+        <div class="ai-panel">
+          <div class="ai-panel-title">🤖 AI License Detective</div>
+          <div class="ai-panel-sub">Describe your business and we'll tell you exactly which licenses you need</div>
+          <div class="ai-input-row">
+            <input class="ai-input" id="ai-input" placeholder="e.g. I run a small restaurant in Ahmedabad with 10 employees..." />
+            <button class="ai-btn" onclick="runAIScan()">Scan ↗</button>
+          </div>
+          <div class="ai-suggestions">
+            <span class="ai-tag" onclick="fillAI('Restaurant in Ahmedabad, 12 staff, serving food')">🍽 Restaurant</span>
+            <span class="ai-tag" onclick="fillAI('Medical pharmacy / chemist shop in Gujarat')">💊 Pharmacy</span>
+            <span class="ai-tag" onclick="fillAI('Small garment manufacturing unit, 25 workers, Surat')">👕 Garment Mfg</span>
+            <span class="ai-tag" onclick="fillAI('IT software company in Ahmedabad, 8 employees')">💻 IT Company</span>
+            <span class="ai-tag" onclick="fillAI('Retail grocery kirana store in Gujarat')">🛒 Kirana Store</span>
+            <span class="ai-tag" onclick="fillAI('Beauty salon and spa in Vadodara')">💇 Salon/Spa</span>
+          </div>
+        </div>
+
+        <div class="ai-result" id="ai-result">
+          <div class="ai-result-title" id="ai-result-title">Based on your business, you likely need:</div>
+          <div id="ai-suggest-list"></div>
+          <div style="margin-top:14px; display:flex; gap:8px; justify-content:flex-end;">
+            <button class="btn" onclick="document.getElementById('ai-result').classList.remove('show')">Cancel</button>
+            <button class="btn btn-primary" onclick="addSelectedLicenses()">Add Selected Licenses</button>
+          </div>
+        </div>
+
+        <div class="box" style="margin-top:18px">
+          <div class="box-title">ℹ️ Common licenses by business type</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px">
+            <div>
+              <div style="font-size:12px; font-weight:600; color:var(--text2); margin-bottom:6px">Food & Restaurant</div>
+              <div class="check-item"><div class="check-dot red"></div>FSSAI License</div>
+              <div class="check-item"><div class="check-dot amber"></div>Fire NOC</div>
+              <div class="check-item"><div class="check-dot amber"></div>Eating House License</div>
+              <div class="check-item"><div class="check-dot green"></div>GST Registration</div>
+              <div class="check-item"><div class="check-dot green"></div>Shop & Establishment Act</div>
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:600; color:var(--text2); margin-bottom:6px">Manufacturing</div>
+              <div class="check-item"><div class="check-dot red"></div>Factory License</div>
+              <div class="check-item"><div class="check-dot red"></div>Pollution NOC (GPCB)</div>
+              <div class="check-item"><div class="check-dot amber"></div>Fire NOC</div>
+              <div class="check-item"><div class="check-dot green"></div>GST Registration</div>
+              <div class="check-item"><div class="check-dot green"></div>MSME Udyam Registration</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ RENEWALS VIEW ═══════════ -->
+      <div class="view" id="view-renewals">
+        <div style="margin-bottom:18px">
+          <div class="box">
+            <div class="box-title">🔄 Renewal Checklist</div>
+            <div id="renewal-list">
+              <div class="empty-state" style="padding:20px">
+                <div style="font-size:28px">🗓</div>
+                <div class="empty-title">No renewals due</div>
+                <div class="empty-sub">Add licenses with expiry dates to see renewal tasks here</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="box">
+          <div class="box-title">💡 Renewal Tips</div>
+          <div class="check-item"><div class="check-dot green"></div> Start FSSAI renewal 30 days before expiry — government processing takes 15–20 days</div>
+          <div class="check-item"><div class="check-dot amber"></div> GST annual return (GSTR-9) is due by December 31st each year</div>
+          <div class="check-item"><div class="check-dot amber"></div> Keep all renewal receipts in this app — upload under each license</div>
+          <div class="check-item"><div class="check-dot green"></div> Fire NOC renewal requires a fresh inspection — book early in peak season</div>
+        </div>
+      </div>
+
+      <!-- ═══════════ SETTINGS VIEW ═══════════ -->
+      <div class="view" id="view-settings">
+        <div class="settings-section">
+          <div class="settings-section-header">🏢 Business Profile</div>
+          <div class="settings-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Business Name</label>
+                <input id="set-biz-name" placeholder="Your Shop / Company Name" />
+              </div>
+              <div class="form-group">
+                <label>Business Type</label>
+                <select id="set-biz-type">
+                  <option value="">Select type...</option>
+                  <option>Restaurant / Food Service</option>
+                  <option>Retail Shop</option>
+                  <option>Manufacturing Unit</option>
+                  <option>Pharmacy / Medical</option>
+                  <option>IT / Software</option>
+                  <option>Salon / Beauty</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>City</label>
+                <input id="set-city" placeholder="Ahmedabad, Surat, etc." />
+              </div>
+              <div class="form-group">
+                <label>GSTIN (optional)</label>
+                <input id="set-gstin" placeholder="22AAAAA0000A1Z5" />
+              </div>
+              <div class="form-group full">
+                <label>Owner / Contact Name</label>
+                <input id="set-owner" placeholder="Full name" />
+              </div>
+            </div>
+            <div style="margin-top:14px">
+              <button class="btn btn-primary" onclick="saveSettings()">Save Profile</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-header">🔔 Reminder Settings</div>
+          <div class="settings-body">
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">90-day reminder</div>
+                <div class="settings-desc">Alert 3 months before expiry</div>
+              </div>
+              <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">30-day reminder</div>
+                <div class="settings-desc">Alert 1 month before expiry</div>
+              </div>
+              <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">7-day final alert</div>
+                <div class="settings-desc">Urgent alert in last week</div>
+              </div>
+              <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-header">💾 Data Management</div>
+          <div class="settings-body">
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+              <button class="btn" onclick="exportData()">⬇️ Export All Data (JSON)</button>
+              <button class="btn" onclick="importData()">⬆️ Import Data</button>
+              <button class="btn btn-danger btn-sm" onclick="clearData()">🗑 Clear All Data</button>
+            </div>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+            <div style="margin-top:10px; font-size:12px; color:var(--text3)">All data is stored locally on your device. Nothing is sent to any server.</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-header">ℹ️ About ComplianceAI</div>
+          <div class="settings-body">
+            <div style="font-size:13px; color:var(--text2); line-height:1.7">
+              <strong>ComplianceAI v1.0</strong> — Free offline tool for Indian SMBs<br>
+              Built to help small business owners never miss a license renewal.<br><br>
+              <strong>Works 100% offline</strong> — no account, no server, no data shared.<br>
+              Just download, open in browser, and start tracking.<br><br>
+              <span style="color:var(--text3)">Made with ❤️ for Indian entrepreneurs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div><!-- /app -->
+
+<!-- ═══════════ ADD/EDIT LICENSE MODAL ═══════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add New License</div>
+      <button class="icon-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>License Name *</label>
+          <input id="f-name" placeholder="e.g. FSSAI Food License" />
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="f-category">
+            <option value="fssai">FSSAI / Food</option>
+            <option value="gst">GST</option>
+            <option value="shop">Shop & Establishment</option>
+            <option value="fire">Fire NOC</option>
+            <option value="factory">Factory License</option>
+            <option value="pollution">Pollution NOC</option>
+            <option value="trade">Trade License</option>
+            <option value="msme">MSME / Udyam</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Governing Body</label>
+          <input id="f-body" placeholder="e.g. FSSAI, GST Council, AMC" />
+        </div>
+        <div class="form-group">
+          <label>License Number</label>
+          <input id="f-number" placeholder="e.g. 10012345678901" />
+        </div>
+        <div class="form-group">
+          <label>Issue Date</label>
+          <input type="date" id="f-issued" />
+        </div>
+        <div class="form-group">
+          <label>Expiry Date *</label>
+          <input type="date" id="f-expiry" />
+        </div>
+        <div class="form-group">
+          <label>Renewal Cost (₹)</label>
+          <input type="number" id="f-cost" placeholder="e.g. 5000" />
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="f-status">
+            <option value="active">Active / Valid</option>
+            <option value="expired">Expired</option>
+            <option value="pending">Pending Renewal</option>
+            <option value="applied">Applied / In Process</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Notes</label>
+          <textarea id="f-notes" placeholder="Any important notes, contact info, file location..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn" onclick="saveLicense()">Save License</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA STORE ───────────────────────────────────────────────────────────────
+let licenses = [];
+let settings = { bizName: 'My Business', bizType: '', city: '', gstin: '', owner: '' };
+let editId = null;
+
+// Load from localStorage
+function loadData() {
+  try {
+    const l = localStorage.getItem('compai_licenses');
+    if (l) licenses = JSON.parse(l);
+    const s = localStorage.getItem('compai_settings');
+    if (s) settings = { ...settings, ...JSON.parse(s) };
+  } catch(e) {}
+}
+
+function saveData() {
+  localStorage.setItem('compai_licenses', JSON.stringify(licenses));
+  localStorage.setItem('compai_settings', JSON.stringify(settings));
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function getDaysUntil(dateStr) {
+  if (!dateStr) return 9999;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exp = new Date(dateStr); exp.setHours(0,0,0,0);
+  return Math.round((exp - today) / (1000 * 60 * 60 * 24));
+}
+
+function getStatus(lic) {
+  const days = getDaysUntil(lic.expiry);
+  if (lic.status === 'expired' || days < 0) return 'expired';
+  if (days <= 90) return 'expiring';
+  return 'valid';
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function catLabel(c) {
+  const map = { fssai:'FSSAI', gst:'GST', shop:'Shop Act', fire:'Fire NOC', factory:'Factory', pollution:'Pollution', trade:'Trade', msme:'MSME', other:'Other' };
+  return map[c] || c;
+}
+
+function catClass(c) {
+  const map = { fssai:'cat-fssai', gst:'cat-gst', shop:'cat-shop', fire:'cat-fire' };
+  return map[c] || 'cat-other';
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function toast(msg, dur=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ─── VIEWS ────────────────────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  const titles = { dashboard:'Dashboard', licenses:'My Licenses', alerts:'Alerts & Reminders', 'ai-scan':'AI License Scan', renewals:'Renewals', settings:'Settings' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+  event.currentTarget?.classList.add('active');
+  renderAll();
+}
+
+// ─── RENDER DASHBOARD ─────────────────────────────────────────────────────────
+function renderDashboard() {
+  const exp = licenses.filter(l => getStatus(l) === 'expired').length;
+  const expiring = licenses.filter(l => getStatus(l) === 'expiring').length;
+  const valid = licenses.filter(l => getStatus(l) === 'valid').length;
+  const total = licenses.length;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-expired').textContent = exp;
+  document.getElementById('stat-expiring').textContent = expiring;
+  document.getElementById('stat-valid').textContent = valid;
+  document.getElementById('nav-count').textContent = total;
+  document.getElementById('nav-alerts').textContent = exp + expiring;
+
+  // Compliance score
+  const score = total === 0 ? 0 : Math.round((valid / total) * 100);
+  document.getElementById('score-val').textContent = total === 0 ? '—' : score + '%';
+  document.getElementById('score-fill').style.width = score + '%';
+
+  // Sidebar biz
+  document.getElementById('sb-biz-name').textContent = settings.bizName || 'My Business';
+  document.getElementById('sb-biz-type').textContent = settings.bizType || 'Not configured';
+
+  // Urgent
+  const urgent = licenses.filter(l => getStatus(l) === 'expired' || getDaysUntil(l.expiry) <= 30)
+    .sort((a,b) => getDaysUntil(a.expiry) - getDaysUntil(b.expiry)).slice(0,5);
+  const urgEl = document.getElementById('dash-urgent');
+  if (urgent.length === 0) {
+    urgEl.innerHTML = '<div class="empty-state" style="padding:20px"><div style="font-size:28px">✅</div><div class="empty-title" style="font-size:13px">All clear!</div></div>';
+  } else {
+    urgEl.innerHTML = urgent.map(l => {
+      const d = getDaysUntil(l.expiry);
+      const cls = d < 0 ? 'red' : 'amber';
+      const msg = d < 0 ? `Expired ${Math.abs(d)}d ago` : `${d}d left`;
+      return `<div class="check-item"><div class="check-dot ${cls}"></div><span style="flex:1">${l.name}</span><span style="font-size:11px;color:var(--text3)">${msg}</span></div>`;
+    }).join('');
+  }
+
+  // Upcoming (30–180 days)
+  const upcoming = licenses.filter(l => { const d = getDaysUntil(l.expiry); return d > 0 && d <= 180; })
+    .sort((a,b) => getDaysUntil(a.expiry) - getDaysUntil(b.expiry)).slice(0,5);
+  const upEl = document.getElementById('dash-upcoming');
+  if (upcoming.length === 0) {
+    upEl.innerHTML = '<div class="empty-state" style="padding:20px"><div style="font-size:28px">🗓</div><div class="empty-title" style="font-size:13px">Nothing due in 6 months</div></div>';
+  } else {
+    upEl.innerHTML = upcoming.map(l => {
+      const d = getDaysUntil(l.expiry);
+      return `<div class="check-item"><div class="check-dot green"></div><span style="flex:1">${l.name}</span><span style="font-size:11px;color:var(--text3)">${fmtDate(l.expiry)}</span></div>`;
+    }).join('');
+  }
+}
+
+// ─── RENDER LICENSES ──────────────────────────────────────────────────────────
+let currentFilter = 'all';
+
+function renderLicenses() {
+  const el = document.getElementById('license-list');
+  let filtered = [...licenses];
+  if (currentFilter === 'expired') filtered = filtered.filter(l => getStatus(l) === 'expired');
+  else if (currentFilter === 'expiring') filtered = filtered.filter(l => getStatus(l) === 'expiring');
+  else if (currentFilter === 'valid') filtered = filtered.filter(l => getStatus(l) === 'valid');
+  else if (currentFilter !== 'all') filtered = filtered.filter(l => l.category === currentFilter);
+
+  filtered.sort((a,b) => getDaysUntil(a.expiry) - getDaysUntil(b.expiry));
+
+  if (filtered.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No licenses found</div><div class="empty-sub">Try a different filter or click <strong>+ Add License</strong></div></div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(l => {
+    const days = getDaysUntil(l.expiry);
+    const st = getStatus(l);
+    let daysBadge = '';
+    if (!l.expiry) daysBadge = `<span class="days-badge safe">No expiry</span>`;
+    else if (days < 0) daysBadge = `<span class="days-badge expired">Expired ${Math.abs(days)}d ago</span>`;
+    else if (days <= 30) daysBadge = `<span class="days-badge expired">${days}d left</span>`;
+    else if (days <= 90) daysBadge = `<span class="days-badge warning">${days}d left</span>`;
+    else daysBadge = `<span class="days-badge safe">${days}d left</span>`;
+
+    return `<div class="license-card ${st}">
+      <div>
+        <span class="cat-badge ${catClass(l.category)}">${catLabel(l.category)}</span>
+        <div class="lic-name" style="margin-top:4px">${l.name}</div>
+        <div class="lic-body">${l.body || '—'}</div>
+        ${l.number ? `<div class="lic-number">${l.number}</div>` : ''}
+      </div>
+      <div>
+        <div class="lic-date-label">Issue Date</div>
+        <div class="lic-date">${fmtDate(l.issued)}</div>
+      </div>
+      <div>
+        <div class="lic-date-label">Expiry Date</div>
+        <div class="lic-date">${fmtDate(l.expiry)}</div>
+      </div>
+      <div>${daysBadge}</div>
+      <div class="card-actions">
+        <button class="icon-btn" onclick="editLicense('${l.id}')" title="Edit">✏️</button>
+        <button class="icon-btn delete" onclick="deleteLicense('${l.id}')" title="Delete">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterLicenses(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLicenses();
+}
+
+// ─── RENDER ALERTS ────────────────────────────────────────────────────────────
+function renderAlerts() {
+  const el = document.getElementById('alert-list');
+  const alerts = [];
+
+  licenses.forEach(l => {
+    const d = getDaysUntil(l.expiry);
+    if (d < 0) alerts.push({ type:'red', icon:'🚨', title: `${l.name} has EXPIRED`, desc: `Expired ${Math.abs(d)} days ago — renew immediately to avoid penalties`, time: fmtDate(l.expiry) });
+    else if (d <= 7) alerts.push({ type:'red', icon:'⚠️', title: `${l.name} expires in ${d} days`, desc: `Critical: only ${d} days left — start renewal process today`, time: fmtDate(l.expiry) });
+    else if (d <= 30) alerts.push({ type:'amber', icon:'🔔', title: `${l.name} expires soon`, desc: `${d} days left — initiate renewal process now`, time: fmtDate(l.expiry) });
+    else if (d <= 90) alerts.push({ type:'amber', icon:'📅', title: `${l.name} renewal due in ${d} days`, desc: `Start preparing renewal documents`, time: fmtDate(l.expiry) });
+  });
+
+  if (alerts.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-title">No alerts right now</div><div class="empty-sub">Add licenses with expiry dates to receive smart reminders</div></div>`;
+    return;
+  }
+
+  alerts.sort((a,b) => a.type === 'red' ? -1 : 1);
+  el.innerHTML = alerts.map(a => `
+    <div class="alert-item">
+      <div class="alert-icon ${a.type}">${a.icon}</div>
+      <div class="alert-body">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-desc">${a.desc}</div>
+      </div>
+      <div class="alert-time">${a.time}</div>
+    </div>`).join('');
+}
+
+// ─── RENDER RENEWALS ──────────────────────────────────────────────────────────
+function renderRenewals() {
+  const el = document.getElementById('renewal-list');
+  const due = licenses.filter(l => l.expiry && getDaysUntil(l.expiry) <= 180)
+    .sort((a,b) => getDaysUntil(a.expiry) - getDaysUntil(b.expiry));
+
+  if (due.length === 0) {
+    el.innerHTML = `<div class="empty-state" style="padding:20px"><div style="font-size:28px">🗓</div><div class="empty-title">No renewals due in 6 months</div></div>`;
+    return;
+  }
+
+  el.innerHTML = due.map(l => {
+    const d = getDaysUntil(l.expiry);
+    const cls = d < 0 ? 'red' : d <= 30 ? 'amber' : 'green';
+    const msg = d < 0 ? `EXPIRED (${Math.abs(d)}d ago)` : `Due in ${d} days`;
+    return `<div class="check-item" style="padding:9px 0">
+      <div class="check-dot ${cls}"></div>
+      <div style="flex:1">
+        <div style="font-size:13px; font-weight:500">${l.name}</div>
+        <div style="font-size:11px; color:var(--text3)">${catLabel(l.category)} · Expires ${fmtDate(l.expiry)}</div>
+      </div>
+      <div style="font-size:12px; color:var(--text2); font-weight:500">${msg}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderDashboard();
+  renderLicenses();
+  renderAlerts();
+  renderRenewals();
+}
+
+// ─── MODAL: ADD / EDIT ────────────────────────────────────────────────────────
+function openAddModal() {
+  editId = null;
+  document.getElementById('modal-title').textContent = 'Add New License';
+  document.getElementById('modal-save-btn').textContent = 'Save License';
+  ['f-name','f-body','f-number','f-notes','f-cost'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-category').value = 'fssai';
+  document.getElementById('f-status').value = 'active';
+  document.getElementById('f-issued').value = '';
+  document.getElementById('f-expiry').value = '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function editLicense(id) {
+  const l = licenses.find(x => x.id === id);
+  if (!l) return;
+  editId = id;
+  document.getElementById('modal-title').textContent = 'Edit License';
+  document.getElementById('modal-save-btn').textContent = 'Update License';
+  document.getElementById('f-name').value = l.name || '';
+  document.getElementById('f-body').value = l.body || '';
+  document.getElementById('f-number').value = l.number || '';
+  document.getElementById('f-category').value = l.category || 'other';
+  document.getElementById('f-status').value = l.status || 'active';
+  document.getElementById('f-issued').value = l.issued || '';
+  document.getElementById('f-expiry').value = l.expiry || '';
+  document.getElementById('f-cost').value = l.cost || '';
+  document.getElementById('f-notes').value = l.notes || '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function saveLicense() {
+  const name = document.getElementById('f-name').value.trim();
+  const expiry = document.getElementById('f-expiry').value;
+  if (!name) { toast('⚠️ Please enter the license name'); return; }
+
+  const data = {
+    id: editId || uid(),
+    name,
+    body: document.getElementById('f-body').value.trim(),
+    number: document.getElementById('f-number').value.trim(),
+    category: document.getElementById('f-category').value,
+    status: document.getElementById('f-status').value,
+    issued: document.getElementById('f-issued').value,
+    expiry: document.getElementById('f-expiry').value,
+    cost: document.getElementById('f-cost').value,
+    notes: document.getElementById('f-notes').value.trim(),
+    addedAt: new Date().toISOString()
+  };
+
+  if (editId) {
+    const idx = licenses.findIndex(l => l.id === editId);
+    if (idx !== -1) licenses[idx] = data;
+    toast('✅ License updated');
+  } else {
+    licenses.push(data);
+    toast('✅ License added successfully');
+  }
+
+  saveData(); closeModal(); renderAll();
+}
+
+function deleteLicense(id) {
+  if (!confirm('Delete this license? This cannot be undone.')) return;
+  licenses = licenses.filter(l => l.id !== id);
+  saveData(); renderAll(); toast('🗑 License deleted');
+}
+
+// ─── AI SCAN ──────────────────────────────────────────────────────────────────
+const LICENSE_DB = {
+  restaurant: [
+    { name:'FSSAI Food Business License', body:'Food Safety & Standards Authority of India', cat:'fssai' },
+    { name:'Eating House License', body:'Local Municipal Corporation', cat:'trade' },
+    { name:'Fire NOC', body:'State Fire & Emergency Services', cat:'fire' },
+    { name:'Shop & Establishment Registration', body:'Labour Department', cat:'shop' },
+    { name:'GST Registration', body:'GST Council / CBIC', cat:'gst' },
+    { name:'Health Trade License', body:'Municipal Corporation', cat:'trade' },
+  ],
+  pharmacy: [
+    { name:'Drug License (Retail)', body:'Central Drugs Standard Control Organisation', cat:'other' },
+    { name:'FSSAI Registration', body:'FSSAI', cat:'fssai' },
+    { name:'GST Registration', body:'GST Council / CBIC', cat:'gst' },
+    { name:'Shop & Establishment Registration', body:'Labour Department', cat:'shop' },
+    { name:'Pharmacy Council Registration', body:'State Pharmacy Council', cat:'other' },
+  ],
+  manufacturing: [
+    { name:'Factory License', body:'Factory Inspectorate, Labour Dept', cat:'factory' },
+    { name:'Pollution NOC (Consent to Operate)', body:'GPCB / State PCB', cat:'pollution' },
+    { name:'Fire NOC', body:'State Fire & Emergency Services', cat:'fire' },
+    { name:'GST Registration', body:'GST Council / CBIC', cat:'gst' },
+    { name:'MSME / Udyam Registration', body:'Ministry of MSME', cat:'msme' },
+    { name:'Shop & Establishment Registration', body:'Labour Department', cat:'shop' },
+  ],
+  it: [
+    { name:'GST Registration', body:'GST Council / CBIC', cat:'gst' },
+    { name:'Shop & Establishment Registration', body:'Labour Department', cat:'shop' },
+    { name:'Professional Tax Registration', body:'State Government', cat:'other' },
+    { name:'MSME / Udyam Registration', body:'Ministry of MSME', cat:'msme' },
+  ],
+  kirana: [
+    { name:'FSSAI Registration', body:'FSSAI', cat:'fssai' },
+    { name:'GST Registration', body:'GST Council / CBIC', cat:'gst' },
+    { name:'Shop & Establishment Registration', body:'Labour Department', cat:'shop' },
+    { name:'Trade License', body:'Municipal Corporation', cat:'trade' },
+  ],
+  salon: [
+    { name:'Shop & Establishment Registration', body:'Labour Department', cat:'shop' },
+    { name:'Trade License', body:'Municipal Corporation', cat:'trade' },
+    { name:'GST Registration', body:'GST Council / CBIC', cat:'gst' },
+    { name:'Fire NOC', body:'State Fire & Emergency Services', cat:'fire' },
+  ],
+};
+
+function fillAI(text) { document.getElementById('ai-input').value = text; }
+
+function runAIScan() {
+  const input = document.getElementById('ai-input').value.toLowerCase();
+  if (!input.trim()) { toast('Please describe your business first'); return; }
+
+  let matches = [];
+  if (input.includes('restaurant') || input.includes('food') || input.includes('hotel') || input.includes('dhaba') || input.includes('cafe')) matches = LICENSE_DB.restaurant;
+  else if (input.includes('pharma') || input.includes('chemi') || input.includes('medical') || input.includes('drug')) matches = LICENSE_DB.pharmacy;
+  else if (input.includes('manufactur') || input.includes('factory') || input.includes('unit') || input.includes('garment') || input.includes('textile')) matches = LICENSE_DB.manufacturing;
+  else if (input.includes('software') || input.includes('it ') || input.includes('tech') || input.includes('app')) matches = LICENSE_DB.it;
+  else if (input.includes('kirana') || input.includes('grocery') || input.includes('store') || input.includes('shop')) matches = LICENSE_DB.kirana;
+  else if (input.includes('salon') || input.includes('beauty') || input.includes('spa') || input.includes('parlour')) matches = LICENSE_DB.salon;
+  else matches = [...LICENSE_DB.kirana, ...LICENSE_DB.it.slice(0,2)];
+
+  // Filter out already added
+  const existing = new Set(licenses.map(l => l.name));
+  const newOnes = matches.filter(m => !existing.has(m.name));
+
+  const el = document.getElementById('ai-suggest-list');
+  if (newOnes.length === 0) {
+    document.getElementById('ai-result-title').textContent = 'Great! You already have all recommended licenses tracked.';
+    el.innerHTML = '';
+  } else {
+    document.getElementById('ai-result-title').textContent = `We found ${newOnes.length} license(s) you should track:`;
+    el.innerHTML = newOnes.map((l, i) => `
+      <div class="ai-lic-suggest">
+        <input type="checkbox" checked id="ai-lic-${i}" data-name="${l.name}" data-body="${l.body}" data-cat="${l.cat}">
+        <div>
+          <div class="ai-lic-suggest-name">${l.name}</div>
+          <div class="ai-lic-suggest-body">${l.body}</div>
+        </div>
+        <span class="cat-badge ${catClass(l.cat)}">${catLabel(l.cat)}</span>
+      </div>`).join('');
+  }
+  document.getElementById('ai-result').classList.add('show');
+}
+
+function addSelectedLicenses() {
+  const checkboxes = document.querySelectorAll('#ai-suggest-list input[type=checkbox]:checked');
+  let count = 0;
+  checkboxes.forEach(cb => {
+    licenses.push({
+      id: uid(),
+      name: cb.dataset.name,
+      body: cb.dataset.body,
+      category: cb.dataset.cat,
+      status: 'active',
+      addedAt: new Date().toISOString()
+    });
+    count++;
+  });
+  if (count > 0) {
+    saveData(); renderAll();
+    document.getElementById('ai-result').classList.remove('show');
+    toast(`✅ Added ${count} license(s) — set expiry dates to enable reminders`);
+    showView('licenses');
+  }
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────────────────────
+function loadSettingsForm() {
+  document.getElementById('set-biz-name').value = settings.bizName || '';
+  document.getElementById('set-biz-type').value = settings.bizType || '';
+  document.getElementById('set-city').value = settings.city || '';
+  document.getElementById('set-gstin').value = settings.gstin || '';
+  document.getElementById('set-owner').value = settings.owner || '';
+}
+
+function saveSettings() {
+  settings.bizName = document.getElementById('set-biz-name').value.trim() || 'My Business';
+  settings.bizType = document.getElementById('set-biz-type').value;
+  settings.city = document.getElementById('set-city').value.trim();
+  settings.gstin = document.getElementById('set-gstin').value.trim();
+  settings.owner = document.getElementById('set-owner').value.trim();
+  saveData(); renderAll(); toast('✅ Profile saved');
+}
+
+// ─── EXPORT / IMPORT ──────────────────────────────────────────────────────────
+function exportData() {
+  const data = { licenses, settings, exportedAt: new Date().toISOString(), version: '1.0' };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `ComplianceAI_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); toast('📥 Data exported');
+}
+
+function importData() { document.getElementById('import-file').click(); }
+
+function handleImport(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.licenses) { licenses = data.licenses; }
+      if (data.settings) { settings = { ...settings, ...data.settings }; }
+      saveData(); renderAll(); loadSettingsForm();
+      toast(`✅ Imported ${licenses.length} licenses`);
+    } catch(err) { toast('❌ Invalid file format'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function clearData() {
+  if (!confirm('This will delete ALL your licenses and settings. Are you sure?')) return;
+  licenses = []; settings = { bizName: 'My Business', bizType: '', city: '', gstin: '', owner: '' };
+  saveData(); renderAll(); loadSettingsForm(); toast('🗑 All data cleared');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadData();
+loadSettingsForm();
+renderAll();
+
+// First-time welcome
+if (licenses.length === 0 && !localStorage.getItem('compai_welcomed')) {
+  localStorage.setItem('compai_welcomed', '1');
+  setTimeout(() => toast('👋 Welcome! Start by going to AI License Scan to detect your licenses', 4000), 800);
+}
+</script>
+</body>
+</html>
